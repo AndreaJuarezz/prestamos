@@ -12,10 +12,10 @@
     <div class="row my-4">
         <div class="col text-end">
         @if(Auth::check())
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+    <form id="logout-form" action="{{ route('logout') }}" method="POST">
         @csrf
+        <button type="submit" class="btn btn-danger">Salir</button>
     </form>
-    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="btn btn-danger">Salir</a>
 @else
     <a href="{{ url('/login') }}" class="btn btn-primary ms-2">Iniciar Sesión</a>
     <a href="{{ url('/register') }}" class="btn btn-success ms-2">Crear Cuenta</a>
