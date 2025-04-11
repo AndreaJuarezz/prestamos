@@ -11,6 +11,8 @@ use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+
 
 
 class MovimientosController extends Controller
@@ -101,30 +103,27 @@ class MovimientosController extends Controller
     ]);
     }
 
-    public function abonosAgregarGet($id_prestamo): View
+    public function abonosAgregarGet($id_prestamo): View|RedirectResponse
 {
     $prestamo = Prestamo::join("empleado", "empleado.id_empleado", "=", "prestamo.fk_id_empleado")
         ->where("id_prestamo", $id_prestamo)
-        ->select("prestamo.*", "empleado.nombre") // Asegúrate de seleccionar los campos necesarios
+        ->select("prestamo.*", "empleado.nombre")
         ->first();
 
-    // Validar si el préstamo existe
     if (!$prestamo) {
         return redirect()->back()->with('error', 'Préstamo no encontrado.');
     }
 
-    $abonos = Abono::where("abono.fk_id_prestamo", $id_prestamo)->get();
+    $abonos = Abono::where("fk_id_prestamo", $id_prestamo)->get();
     $num_abono = count($abonos) + 1;
 
-    // Obtener el último abono registrado
-    $ultimo_abono = Abono::where("abono.fk_id_prestamo", $id_prestamo)
+    $ultimo_abono = Abono::where("fk_id_prestamo", $id_prestamo)
         ->orderBy("fecha", "desc")
         ->first();
 
-    // Si hay un abono previo, tomamos su saldo actual, si no, usamos el saldo del préstamo
     $saldo_actual = $ultimo_abono ? $ultimo_abono->saldo_actual : $prestamo->saldo_actual;
 
-    // Verificar que el préstamo tenga una tasa mensual válida antes de calcular
+    // Calculamos los valores necesarios para la vista
     $monto_interes = $saldo_actual * ($prestamo->tasa_mensual / 100);
     $monto_cobrado = $prestamo->pago_fijo_cap + $monto_interes;
     $saldo_pendiente = $saldo_actual - $prestamo->pago_fijo_cap;
@@ -139,54 +138,86 @@ class MovimientosController extends Controller
     return view('movimientos/abonosAgregarGet', [
         'prestamo' => $prestamo,
         'num_abono' => $num_abono,
-        'pago_fijo_cap' => $pago_fijo_cap,
+        'pago_fijo_cap' => $pago_fijo_cap, 
         'monto_interes' => $monto_interes,
         'monto_cobrado' => $monto_cobrado,
         'saldo_pendiente' => $saldo_pendiente,
         'breadcrumbs' => [
             "Inicio" => url("/"),
-            "Prestamos" => urlg),
+            "Prestamos" => url("/movimientos/prestamos"),
             "Abonos" => url("/prestamos/{$prestamo->id_prestamo}/abonos"),
-            "Agregar" => "",
+            "Agregar" => url("/prestamos/{$prestamo->id_prestamo}/abonos/agregar"),
         ]
     ]);
 }
 
-    
-    public function abonosAgregarPost(Request $request)
-    {
-        $id_prestamo = $request->input("id_prestamo");
-        $num_abono = $request->input("num_abono");
-        $fecha = $request->input("fecha");
-        $monto_capital = $request->input("monto_capital");
-        $monto_interes = $request->input("monto_interes");
-        $monto_cobrado = $request->input("monto_cobrado");
-        $saldo_pendiente = $request->input("saldo_pendiente");
+public function abonosAgregarPost(Request $request)
+{
+    dd($request->all());
+
+    $id_prestamo = $request->input("id_prestamo");
+    $num_abono = $request->input("num_abono");
+    $fecha = $request->input("fecha");
+    $monto_capital = $request->input("monto_capital");
+    $monto_interes = $request->input("monto_interes");
+    $monto_cobrado = $request->input("monto_cobrado");
+    $saldo_pendiente = $request->input("saldo_pendiente");
+
+    // Validar que todos los datos están presentes
+    if (!$id_prestamo || !$num_abono || !$fecha || !$monto_capital || !$monto_interes || !$monto_cobrado || !$saldo_pendiente) {
+        return redirect()->back()->with('error', 'Todos los campos son obligatorios.');
         
-        // Crear el nuevo abono
-        $abono = new Abono([
-            "id_prestamo" => $id_prestamo,
-            "num_abono" => $num_abono,
-            "fecha" => $fecha,
-            "monto_capital" => $monto_capital,
-            "monto_interes" => $monto_interes,
-            "monto_cobrado" => $monto_cobrado,
-            "saldo_actual" => $saldo_pendiente,
-        ]);
-
-        $abono->save();
-
-        // Actualizar el saldo del préstamo
-        $prestamo = Prestamo::find($id_prestamo);
-        $prestamo->saldo_actual = $saldo_pendiente;
-        if ($saldo_pendiente < 0.01) {
-            $prestamo->estado = 1; // Marcar como pagado si el saldo llega a 0
-        }
-
-        $prestamo->save();
-
-        return redirect("/prestamos/{$id_prestamo}/abonos");
     }
+
+    $abono = new Abono([
+        "fk_id_prestamo" => $id_prestamo,
+        "num_abono" => $num_abono,
+        "fecha" => $fecha,
+        "monto_capital" => $monto_capital,
+        "monto_interes" => $monto_interes,
+        "monto_cobrado" => $monto_cobrado,
+        "saldo_actual" => $saldo_pendiente,
+    ]);
+
+    $abono->save();
+
+    // Actualizar el saldo del préstamo
+    $prestamo = Prestamo::find($id_prestamo);
+    $prestamo->saldo_actual = $saldo_pendiente;
+    if ($saldo_pendiente < 0.01) {
+        $prestamo->estado = 1; // Marcar como pagado si el saldo llega a 0
+    }
+    $prestamo->save();
+
+    // Redirigir de vuelta a la lista de abonos con un mensaje de éxito
+    return redirect(url("/prestamos/{$id_prestamo}/abonos"))->with('success', 'Abono guardado exitosamente.');
+
+}
+
+    public function empleadosPrestamosGet(Request $request, $id_empleado): View
+    {
+        // Buscar el empleado por ID
+        $empleado = Empleado::find($id_empleado);
+    
+        // Validar si el empleado existe
+        if (!$empleado) {
+            abort(404, "Empleado no encontrado");
+        }
+    
+        // Obtener todos los préstamos del empleado
+        $prestamos = Prestamo::where('fk_id_empleado', $id_empleado)->get();
+    
+        // Retornar la vista con los datos necesarios
+        return view('movimientos/empleadosPrestamosGet', [
+            'empleado' => $empleado,
+            'prestamos' => $prestamos,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Prestamos' => url('/movimientos/prestamos'),
+            ],
+        ]);
+    }
+    
 
 }
  

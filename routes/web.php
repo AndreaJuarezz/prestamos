@@ -30,7 +30,10 @@ Route::get("/movimientos/prestamos/agregar",[MovimientosController::class, "pres
 Route::post("/movimientos/prestamos/agregar",[MovimientosController::class, "prestamosAgregarPost"]);
 Route::get("/movimientos/prestamos/{prest}/abonos",[MovimientosController::class, "abonosGet"])->where("prest","\\d+");
 Route::get('/prestamos/{id}/abonos/agregar', [MovimientosController::class, 'abonosAgregarGet'])->name('abonos.agregar.get');
-Route::post("/prestamos/{id}/abonos/agregar", [MovimientosController::class, "abonosAgregarPost"])->where("prest", "\\d+");
+
+Route::post("/prestamos/{id}/abonos/agregar", [MovimientosController::class, "abonosAgregarPost"])->where("id", "\\d+");
+Route::get('/movimientos/empleados/{id_empleado}', [MovimientosController::class, 'empleadosPrestamosGet']);
+
 
 //reportes
 Route::get("/reportes",[ReportesController::class,"indexGet"]);

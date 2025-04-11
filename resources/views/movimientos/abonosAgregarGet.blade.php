@@ -35,6 +35,12 @@
 <form method="post" action="{{url('/prestamos/{$prestamo->id_prestamo}/abonos/agregar')}}">
 @csrf <!-- Sirve para validar que la petición de los datos enviados provengan del formulario actual -->
     <input type="hidden" name="id_prestamo" value="{{$prestamo->id_prestamo}}">
+    <form method="post" action="{{ url('/prestamos/' . $prestamo->id_prestamo . '/abonos/agregar') }}">
+    @csrf
+    <input type="hidden" name="id_prestamo" value="{{ $prestamo->id_prestamo }}">
+    <!-- Resto del formulario -->
+</form>
+
 
     <div class="row my-4">
         <div class="form-group mb-3 col-6">

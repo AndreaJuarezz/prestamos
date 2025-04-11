@@ -142,7 +142,7 @@ public function empleadosPuestosCambiarPost(Request $request, $id_empleado)
         ]);
         $puesto->save();
     
-        return redirect("/empleados/{$id_empleado}/puestos");
+        return redirect("/catalogos/empleados/{$id_empleado}/puestos");
     }
         
     

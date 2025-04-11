@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ secure_asset('https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css') }}">
+
 
     <!--importar los archivos js de bootstrap-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ secure_asset('https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.bundle.min.js') }}"></script>
     <!-- importar librerías de estilos y javascript de datatables para manipular tablas desde el
     navegador del usuario-->
     <link href={{ secure_asset('DataTables/datatables.min.css')}} rel="stylesheet"/>
