@@ -31,10 +31,6 @@ Proyecto académico de Ingeniería Informática, Tecnológico Nacional de Méxic
 - CSS
 - Railway (despliegue)
 
-## Capturas de pantalla
-
-> Agrega aquí 3 o 4 capturas: lista de empleados, solicitud de préstamo, historial y reportes.
-
 ## Cómo ejecutarlo
 
 > Ajusta estos pasos si tu configuración es distinta.
